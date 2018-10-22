@@ -3,12 +3,11 @@ def show_web(html):
     with open("page/network.html", "rb") as file:
         body = header + file.read()
 
-    response = header + body
-
-    return response
+    return header, body
 
 
 def run():
+    global last
     from time import sleep
     import socket
     import ujson
@@ -30,6 +29,7 @@ def run():
     print('[|] Esperando cliente...')
 
     clients = []
+    webs = ['network.html', 'wifi.html', 'mqtt.html', 'mode.html']
 
     while True:
         client, addr = sock.accept()
@@ -39,49 +39,37 @@ def run():
             print('[+] Cliente %s conectado.' % addr[0])
 
         msg1 = client.recv(1500).decode()
-        print(msg1)
         msg1 = msg1.split('\n')
 
         extract = msg1[0]
         extract = extract.split(' ')
         method = extract[0]
+
         try:
             html = extract[1].lstrip('/')
+            if html == '':
+                html = 'network.html'
         except IndexError:
-            html = ''
+            html = 'network.html'
 
         if method == 'GET':
-            if 'next' in html:
-                try:
-                    if last == '':
-                        html = 'network.html'
-                    elif last == 'network':
-                        html = 'wifi.html'
-                    elif last == 'wifi':
-                        html = 'mqtt.html'
-                    elif last == 'mqtt':
-                        html = 'mode.html'
-                    elif last == 'mode':
-                        html = 'overview.html'
+            if 'index' in html:
+                html = webs[last+1]
 
-                except:
-                    html = ''
-
-            if html == '' or html == 'network.html':
-                last = 'network'
+            if html in webs:
+                header, body = show_web(html)
 
             elif html == 'confirmation.html':
                 header = 'HTTP/1.1 200 OK\nContent-Type: text/html\n\n'.encode()
-                with open("page/confirmation.html", "rb") as file:
-                    response = header + file.read()
+                body = '<center><h4>Configuration saved successfully.</h4><form method="get" ' \
+                       'action="next.html"><button type="submit">Next</button></form></center>'.encode()
 
             else:
                 print('[-] Error: pagina no encontrada')
                 header = 'HTTP/1.1 404 Not Found\n\n'.encode()
-                response = '<html><head><title>Config WiFi</title></head><body><center><h2>Error 404: File not ' \
-                           'found</h2><p>Python HTTP Server</p></center></body></html>'.encode()
+                body = '<center><h4>Error 404: File not found</h4><p>Python HTTP Server</p></center>'.encode()
 
-                response = header + response
+            last = webs.index(html)
 
         elif method == 'POST':
             msg2 = client.recv(1500).decode()
@@ -228,6 +216,8 @@ def run():
             header = 'HTTP/1.1 200 OK\nContent-Type: text/html\n\n'.encode()
             with open(path_page + '/confirmation.html', "rb") as file:
                 response = header + file.read()
+
+        response = header + body
 
         client.send(response)
         client.close()

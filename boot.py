@@ -1,7 +1,7 @@
+from web import server
 import ubinascii
 import network
 import machine
-import web
 import os
 
 ap_if = network.WLAN(network.AP_IF)
@@ -22,6 +22,6 @@ if not check_file:
     ap_if.active(True)
     ap_if.config(essid=essid, authmode=0)
 
-    web.server()
+    server.run()
 
     machine.reset()
