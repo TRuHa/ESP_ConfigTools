@@ -1,5 +1,8 @@
+def show_web(html):
+    pass
+
+
 def run():
-    global last
     from time import sleep
     import socket
     import ujson
@@ -311,3 +314,7 @@ def run():
 
         client.send(response)
         client.close()
+
+
+if __name__ == '__main__':
+    run()
