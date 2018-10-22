@@ -1,5 +1,11 @@
 def show_web(html):
-    pass
+    header = 'HTTP/1.1 200 OK\nContent-Type: text/html\n\n'.encode()
+    with open("page/network.html", "rb") as file:
+        body = header + file.read()
+
+    response = header + body
+
+    return response
 
 
 def run():
@@ -63,95 +69,6 @@ def run():
 
             if html == '' or html == 'network.html':
                 last = 'network'
-                header = 'HTTP/1.1 200 OK\nContent-Type: text/html\n\n'.encode()
-                with open("page/network.html", "rb") as file:
-                    response = header + file.read()
-
-            elif html == 'wifi.html':
-                last = 'wifi'
-                header = 'HTTP/1.1 200 OK\nContent-Type: text/html\n\n'.encode()
-                with open("page/wifi.html", "rb") as file:
-                    response = header + file.read()
-
-            elif html == 'mqtt.html':
-                last = 'mqtt'
-                header = 'HTTP/1.1 200 OK\nContent-Type: text/html\n\n'.encode()
-                with open("page/mqtt.html", "rb") as file:
-                    response = header + file.read()
-
-            elif html == 'mode.html':
-                last = 'mode'
-                header = 'HTTP/1.1 200 OK\nContent-Type: text/html\n\n'.encode()
-                with open("page/mode.html", "rb") as file:
-                    response = header + file.read()
-
-            elif html == 'overview.html':
-                last = 'overview'
-                with open('config/network.json') as ujson_network:
-                    data = ujson.load(ujson_network)
-                    for d in data['network']:
-                        method = d['method']
-                        ip = d['ip']
-                        mask = d['mask']
-                        gate = d['gate']
-                        dns = d['dns']
-
-                with open('config/wifi.json') as ujson_network:
-                    data = ujson.load(ujson_network)
-                    for d in data['wifi']:
-                        essid = d['essid']
-                        psk = d['psk']
-
-                with open('config/mqtt.json') as ujson_network:
-                    data = ujson.load(ujson_network)
-                    for d in data['mqtt']:
-                        id = d['id']
-                        broker = d['broker']
-                        port = d['port']
-                        user = d['user']
-                        psw = d['psw']
-                        topic = d['topic']
-
-                with open('config/mode.json') as ujson_network:
-                    data = ujson.load(ujson_network)
-                    for d in data['mode']:
-                        model = d['model']
-                        type = d['type']
-                        gpio = d['port']
-
-                header = 'HTTP/1.1 200 OK\nContent-Type: text/html\n\n'.encode()
-
-                res_network = '<form method="post"><table align="center"><tr align="right"><td><label ' \
-                              'style="font-weight: bold">Protocol:</label></td><td>%s</td></tr><tr ' \
-                              'align="right"><td><label style="font-weight: bold">IP ' \
-                              'Address:</label></td><td>%s</td></tr><tr align="right"><td><label style="font-weight: ' \
-                              'bold">Netmask:</label></td><td>%s</td></tr><tr align="right"><td><label ' \
-                              'style="font-weight: bold">Gateway:</label></td><td>%s</td></tr><tr ' \
-                              'align="right"><td><label style="font-weight: bold">DNS ' \
-                              'Server:</label></td><td>%s</td></tr><tr><td><p>' % (method, ip, mask, gate,
-                                                                                         dns)
-
-                res_wifi = '</p></td></tr><tr align="right"><td><label style="font-weight: ' \
-                           'bold">ESSID:</label></td><td>%s</td></tr><tr align="right"><td><label style="font-weight: ' \
-                           'bold">PSK:</label></td><td>%s</td></tr><tr><td><p>' % (essid, psk)
-
-                res_mqtt = '</p></td></tr><tr align="right"><td><label style="font-weight: bold">ID ' \
-                           'Client:</label></td><td>%s</td></tr><tr align="right"><td><label style="font-weight: ' \
-                           'bold">Broker host/IP:</label></td><td>%s</td></tr><tr align="right"><td><label ' \
-                           'style="font-weight: bold">Port:</label></td><td>%s</td></tr><tr align="right"><td><label ' \
-                           'style="font-weight: bold">User:</label></td><td>%s</td></tr><tr align="right"><td><label ' \
-                           'style="font-weight: bold">Password:</label></td><td>%s</td></tr><tr ' \
-                           'align="right"><td><label style="font-weight: ' \
-                           'bold">Topic:</label></td><td>%s</td></tr><tr><td><p>' % (id, broker, port, user, psw,
-                                                                                     topic)
-
-                res_mode = '</p></td></tr><tr align="right"><td><label style="font-weight: ' \
-                           'bold">Model:</label></td><td>%s</td></tr><tr align="right"><td><label style="font-weight: ' \
-                           'bold">Type:</label></td><td>%s</td></tr><tr align="right"><td><label style="font-weight: ' \
-                           'bold">Port:</label></td><td>%s</td></tr><tr><td><p></p></td></tr><tr><td><input ' \
-                           'type="submit" value="Reboot System"></td></tr></table></form>' % (model, type, gpio)
-
-                response = header + res_network.encode() + res_wifi.encode() + res_mqtt.encode() + res_mode.encode()
 
             elif html == 'confirmation.html':
                 header = 'HTTP/1.1 200 OK\nContent-Type: text/html\n\n'.encode()
