@@ -1,6 +1,6 @@
 def show_web(html):
     header = 'HTTP/1.1 200 OK\nContent-Type: text/html\n\n'.encode()
-    with open("page/network.html", "rb") as file:
+    with open("page/" + html, "rb") as file:
         body = header + file.read()
 
     return header, body
@@ -73,135 +73,108 @@ def run():
 
         elif method == 'POST':
             msg2 = client.recv(1500).decode()
-            print(msg2)
             msg2 = msg2.split('\n')
 
             count = len(msg2)
             answer = msg2[count - 1]
             answer = answer.split('&')
 
-            print(last)
-
             if last == '' or last == 'network':
                 last = 'network'
-                try:
-                    method = answer[0].lstrip('method=')
-                    ip = answer[1].lstrip('ip=')
-                    mask = answer[2].lstrip('mask=')
-                    gate = answer[3].lstrip('gate=')
-                    dns = answer[4].lstrip('dns=')
 
-                    data = {
-                        'network': [
-                            {
-                                'method': method,
-                                'ip': ip,
-                                'mask': mask,
-                                'gate': gate,
-                                'dns': dns
-                            }
-                        ]
-                    }
+                method = answer[0].lstrip('method=')
+                ip = answer[1].lstrip('ip=')
+                mask = answer[2].lstrip('mask=')
+                gate = answer[3].lstrip('gate=')
+                dns = answer[4].lstrip('dns=')
 
-                    with open("config/network.json", "w") as outfile:
-                        outfile.write(ujson.dumps(data))
+                data = {
+                    'network': [
+                        {
+                            'method': method,
+                            'ip': ip,
+                            'mask': mask,
+                            'gate': gate,
+                            'dns': dns
+                        }
+                    ]
+                }
 
-                    print(os.listdir('config'))
-
-                except IndexError:
-                    print('[!] Algo salio mal')
-                    last = ''
+                with open("config/network.json", "w") as outfile:
+                    outfile.write(ujson.dumps(data))
 
             elif last == 'wifi':
                 last = 'wifi'
-                try:
-                    essid = answer[0].lstrip('essid=')
-                    psk = answer[1].lstrip('psk=')
 
-                    if '+' in essid:
-                        essid = essid.replace("+", " ")
+                essid = answer[0].lstrip('essid=')
+                psk = answer[1].lstrip('psk=')
 
-                    data = {
-                        'wifi': [
-                            {
-                                'essid': essid,
-                                'psk': psk,
-                            }
-                        ]
-                    }
+                if '+' in essid:
+                    essid = essid.replace("+", " ")
 
-                    with open("config/wifi.json", "w") as outfile:
-                        outfile.write(ujson.dumps(data))
+                data = {
+                    'wifi': [
+                        {
+                            'essid': essid,
+                            'psk': psk,
+                        }
+                    ]
+                }
 
-                    print(os.listdir('config'))
-
-                except IndexError:
-                    print('[!] Algo salio mal')
-                    last = 'network'
+                with open("config/wifi.json", "w") as outfile:
+                    outfile.write(ujson.dumps(data))
 
             elif last == 'mqtt':
                 last = 'mqtt'
-                try:
-                    id = answer[0].lstrip('id=')
-                    broker = answer[1].lstrip('broker=')
-                    port = answer[2].lstrip('port=')
-                    user = answer[3].lstrip('user=')
-                    psw = answer[4].lstrip('psw=')
-                    topic = answer[5].lstrip('topic=')
 
-                    if '%2F' in topic:
-                        topic = topic.replace("%2F", "/")
+                id = answer[0].lstrip('id=')
+                broker = answer[1].lstrip('broker=')
+                port = answer[2].lstrip('port=')
+                user = answer[3].lstrip('user=')
+                psw = answer[4].lstrip('psw=')
+                topic = answer[5].lstrip('topic=')
 
-                    data = {
-                        'mqtt': [
-                            {
-                                'id': id,
-                                'broker': broker,
-                                'port': port,
-                                'user': user,
-                                'psw': psw,
-                                'topic': topic
-                            }
-                        ]
-                    }
+                if '%2F' in topic:
+                    topic = topic.replace("%2F", "/")
 
-                    with open("config/mqtt.json", "w") as outfile:
-                        outfile.write(ujson.dumps(data))
+                data = {
+                    'mqtt': [
+                        {
+                            'id': id,
+                            'broker': broker,
+                            'port': port,
+                            'user': user,
+                            'psw': psw,
+                            'topic': topic
+                        }
+                    ]
+                }
 
-                    print(os.listdir('config'))
-
-                except IndexError:
-                    print('[!] Algo salio mal')
-                    last = 'wifi'
+                with open("config/mqtt.json", "w") as outfile:
+                    outfile.write(ujson.dumps(data))
 
             elif last == 'mode':
                 last = 'mode'
-                try:
-                    model = answer[0].lstrip('model=')
-                    type = answer[1].lstrip('type=')
 
-                    if '+' in type:
-                        type = type.replace("+", " ")
+                model = answer[0].lstrip('model=')
+                type = answer[1].lstrip('type=')
 
-                    port = answer[2].lstrip('port=')
+                if '+' in type:
+                    type = type.replace("+", " ")
 
-                    data = {
-                        'mode': [
-                            {
-                                'model': model,
-                                'type': type,
-                                'port': port,
-                            }
-                        ]
-                    }
-                    with open("config/mode.json", "w") as outfile:
-                        outfile.write(ujson.dumps(data))
+                port = answer[2].lstrip('port=')
 
-                    print(os.listdir('config'))
-
-                except IndexError:
-                    print('[!] Algo salio mal')
-                    last = 'mqtt'
+                data = {
+                    'mode': [
+                        {
+                            'model': model,
+                            'type': type,
+                            'port': port,
+                        }
+                    ]
+                }
+                with open("config/mode.json", "w") as outfile:
+                    outfile.write(ujson.dumps(data))
 
             elif last == 'overview':
                 print('[-] Reiniciando el sistema.')
