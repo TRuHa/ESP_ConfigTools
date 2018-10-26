@@ -6,14 +6,85 @@ def show_web(html):
     return header, body
 
 
+def save_data(web, items):
+    import ujson
+    if web == 'network.html':
+        with open("config/config.json", "r+") as outfile:
+            data = ujson.load(outfile)
+            subdata = data['network']
+
+            for item in subdata:
+                item["method"] = items[0].lstrip('method=')
+                item["ip"] = items[1].lstrip('ip=')
+                item["mask"] = items[2].lstrip('mask=')
+                item["gate"] = items[3].lstrip('gate=')
+                item["dns"] = items[3].lstrip('gate=')
+
+            outfile.seek(0)
+            outfile.write(ujson.dumps(data))
+            outfile.truncate()
+
+    elif web == 'wifi.html':
+        essid = items[0].lstrip('essid=')
+        if '+' in essid:
+            essid = essid.replace("+", " ")
+
+        with open("config/config.json", "r+") as outfile:
+            data = ujson.load(outfile)
+            subdata = data['wifi']
+
+            for item in subdata:
+                item['essid'] = essid
+                item['psk'] = items[1].lstrip('psk=')
+
+            outfile.seek(0)
+            outfile.write(ujson.dumps(data))
+            outfile.truncate()
+
+    elif web == 'mqtt.html':
+        topic = items[5].lstrip('topic=')
+        if '%2F' in topic:
+            topic = topic.replace("%2F", "/")
+
+        with open("config/config.json", "r+") as outfile:
+            data = ujson.load(outfile)
+            subdata = data['mqtt']
+
+            for item in subdata:
+                item['id'] = items[0].lstrip('id=')
+                item['broker'] = items[1].lstrip('broker=')
+                item['port'] = items[2].lstrip('port=')
+                item['user'] = items[3].lstrip('user=')
+                item['psw'] = items[4].lstrip('psw=')
+                item['topic'] = topic
+
+            outfile.seek(0)
+            outfile.write(ujson.dumps(data))
+            outfile.truncate()
+
+    elif web == 'mode.html':
+        type = items[1].lstrip('type=')
+        if '+' in type:
+            type = type.replace("+", " ")
+
+        with open("config/config.json", "r+") as outfile:
+            data = ujson.load(outfile)
+            subdata = data['mode']
+
+            for item in subdata:
+                item['model'] = items[0].lstrip('model=')
+                item['type'] = type
+                item['gpio'] = items[2].lstrip('gpio=')
+
+            outfile.seek(0)
+            outfile.write(ujson.dumps(data))
+            outfile.truncate()
+
+
 def run():
     global last
-    from time import sleep
     import socket
-    import ujson
     import os
-
-    path_page = "page"
 
     addr = socket.getaddrinfo('0.0.0.0', 80)[0][- 1]
 
@@ -54,22 +125,31 @@ def run():
 
         if method == 'GET':
             if 'index' in html:
-                html = webs[last+1]
+                try:
+                    html = webs[last + 1]
+
+                except IndexError:
+                    print('[-] Sistema configurado correctamente, reiniciando...')
+                    header = 'HTTP/1.1 200 OK\nContent-Type: text/html\n\n'.encode()
+                    body = '<center><h4>Configuration saved successfully.</h4><p>Rebooting the ' \
+                           'system.</p></center>'.encode()
+
+                    response = header + body
+
+                    client.send(response)
+                    client.close()
+                    sock.close()
+
+                    break
 
             if html in webs:
                 header, body = show_web(html)
-
-            elif html == 'confirmation.html':
-                header = 'HTTP/1.1 200 OK\nContent-Type: text/html\n\n'.encode()
-                body = '<center><h4>Configuration saved successfully.</h4><form method="get" ' \
-                       'action="next.html"><button type="submit">Next</button></form></center>'.encode()
+                last = webs.index(html)
 
             else:
                 print('[-] Error: pagina no encontrada')
                 header = 'HTTP/1.1 404 Not Found\n\n'.encode()
                 body = '<center><h4>Error 404: File not found</h4><p>Python HTTP Server</p></center>'.encode()
-
-            last = webs.index(html)
 
         elif method == 'POST':
             msg2 = client.recv(1500).decode()
@@ -79,116 +159,13 @@ def run():
             answer = msg2[count - 1]
             answer = answer.split('&')
 
-            if last == '' or last == 'network':
-                last = 'network'
+            save_data(webs[last], answer)
 
-                method = answer[0].lstrip('method=')
-                ip = answer[1].lstrip('ip=')
-                mask = answer[2].lstrip('mask=')
-                gate = answer[3].lstrip('gate=')
-                dns = answer[4].lstrip('dns=')
-
-                data = {
-                    'network': [
-                        {
-                            'method': method,
-                            'ip': ip,
-                            'mask': mask,
-                            'gate': gate,
-                            'dns': dns
-                        }
-                    ]
-                }
-
-                with open("config/network.json", "w") as outfile:
-                    outfile.write(ujson.dumps(data))
-
-            elif last == 'wifi':
-                last = 'wifi'
-
-                essid = answer[0].lstrip('essid=')
-                psk = answer[1].lstrip('psk=')
-
-                if '+' in essid:
-                    essid = essid.replace("+", " ")
-
-                data = {
-                    'wifi': [
-                        {
-                            'essid': essid,
-                            'psk': psk,
-                        }
-                    ]
-                }
-
-                with open("config/wifi.json", "w") as outfile:
-                    outfile.write(ujson.dumps(data))
-
-            elif last == 'mqtt':
-                last = 'mqtt'
-
-                id = answer[0].lstrip('id=')
-                broker = answer[1].lstrip('broker=')
-                port = answer[2].lstrip('port=')
-                user = answer[3].lstrip('user=')
-                psw = answer[4].lstrip('psw=')
-                topic = answer[5].lstrip('topic=')
-
-                if '%2F' in topic:
-                    topic = topic.replace("%2F", "/")
-
-                data = {
-                    'mqtt': [
-                        {
-                            'id': id,
-                            'broker': broker,
-                            'port': port,
-                            'user': user,
-                            'psw': psw,
-                            'topic': topic
-                        }
-                    ]
-                }
-
-                with open("config/mqtt.json", "w") as outfile:
-                    outfile.write(ujson.dumps(data))
-
-            elif last == 'mode':
-                last = 'mode'
-
-                model = answer[0].lstrip('model=')
-                type = answer[1].lstrip('type=')
-
-                if '+' in type:
-                    type = type.replace("+", " ")
-
-                port = answer[2].lstrip('port=')
-
-                data = {
-                    'mode': [
-                        {
-                            'model': model,
-                            'type': type,
-                            'port': port,
-                        }
-                    ]
-                }
-                with open("config/mode.json", "w") as outfile:
-                    outfile.write(ujson.dumps(data))
-
-            elif last == 'overview':
-                print('[-] Reiniciando el sistema.')
-                client.close()
-
-                sleep(1)
-
-                break
-
-            print('[-] Datos %s guardados.' % last)
+            print('[-] Datos %s guardados.' % webs[last])
 
             header = 'HTTP/1.1 200 OK\nContent-Type: text/html\n\n'.encode()
-            with open(path_page + '/confirmation.html', "rb") as file:
-                response = header + file.read()
+            body = '<center><h4>Configuration saved successfully.</h4><form method="get" ' \
+                   'action="next.html"><button type="submit">Next</button></form></center>'.encode()
 
         response = header + body
 
