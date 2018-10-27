@@ -11,12 +11,12 @@ sta_if = network.WLAN(network.STA_IF)
 sta_if.active(False)
 
 print('[-] Iniciando sistema.')
-check_file = "wifi.json" in os.listdir('config')
+check_file = "config.json" in os.listdir()
 
 if not check_file:
     print('[!] Sistema sin configuracion.')
 
-    mac = ubinascii.hexlify(ap_if.config('mac'),':').decode()
+    mac = ubinascii.hexlify(ap_if.config('mac'), ':').decode()
     essid = 'ESP_Config_' + mac
 
     ap_if.active(True)
