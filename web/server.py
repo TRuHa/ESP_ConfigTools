@@ -9,7 +9,7 @@ def show_web(html):
 def save_data(web, items):
     import ujson
     if web == 'network.html':
-        with open("config/config.json", "r+") as outfile:
+        with open("config.json", "r+") as outfile:
             data = ujson.load(outfile)
             subdata = data['network']
 
@@ -29,7 +29,7 @@ def save_data(web, items):
         if '+' in essid:
             essid = essid.replace("+", " ")
 
-        with open("config/config.json", "r+") as outfile:
+        with open("config.json", "r+") as outfile:
             data = ujson.load(outfile)
             subdata = data['wifi']
 
@@ -46,7 +46,7 @@ def save_data(web, items):
         if '%2F' in topic:
             topic = topic.replace("%2F", "/")
 
-        with open("config/config.json", "r+") as outfile:
+        with open("config.json", "r+") as outfile:
             data = ujson.load(outfile)
             subdata = data['mqtt']
 
@@ -67,7 +67,7 @@ def save_data(web, items):
         if '+' in type:
             type = type.replace("+", " ")
 
-        with open("config/config.json", "r+") as outfile:
+        with open("config.json", "r+") as outfile:
             data = ujson.load(outfile)
             subdata = data['mode']
 
@@ -82,7 +82,7 @@ def save_data(web, items):
 
 
 def run():
-    global last
+    import machine
     import socket
     import os
 
@@ -139,6 +139,8 @@ def run():
                     client.send(response)
                     client.close()
                     sock.close()
+
+                    machine.reset()
 
                     break
 
