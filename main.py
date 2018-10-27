@@ -12,16 +12,24 @@ sta_if.active(True)
 
 print('[-] Leyendo configuracion.')
 
-try:
-    with open('config/wifi.json') as wifi:
-        data = ujson.load(wifi)
-        for d in data['wifi']:
-            essid = d['essid']
-            psk = d['psk']
-except OSError:
-    print('[!] Configuracion no encontrada, reiniciado...')
-    sleep(2)
-    machine.reset()
+with open("config.json", "r") as file:
+    data = ujson.load(file)
+
+    for item in data['network']:
+        method = item['method']
+        ip = item['ip']
+        mask = item['mask']
+        gate = item['gate']
+        dns = item['dns']
+
+    for item in data['wifi']:
+        essid = item['essid']
+        psk = item['psk']
+
+    for d in data['mode']:
+        model = d['model']
+        type = d['type']
+        gpio = d['gpio']
 
 print('[-] Contectando a:', essid)
 
@@ -43,20 +51,11 @@ while True:
         sleep(300)
 
     else:
-        with open('page/network.json') as ujson_network:
-            data = ujson.load(ujson_network)
-            for d in data['network']:
-                method = d['method']
-                ip = d['ip']
-                mask = d['mask']
-                gate = d['gate']
-                dns = d['dns']
-
         if method == 'DHCP':
             ip = sta_if.ifconfig()
 
         else:
-            ip = sta_if.ifconfig(ip, mask, gate, dns)
+            ip = sta_if.ifconfig((ip, mask, gate, dns))
 
         print('[-] Conexion establecida correctamente.')
         print('[|] IP: ', ip[0])
@@ -68,10 +67,15 @@ while True:
 
         break
 
-with open('page/mode.json') as ujson_network:
-    data = ujson.load(ujson_network)
-    for d in data['mode']:
-        model = d['model']
-        type = d['type']
-        port = d['port']
+print('[-] Iniciando %s en modo: %s') % (model, type)
 
+if model == 'ESP01':
+    if type == 'Rele':
+        from ESP01 import moduloRele
+
+        moduloRele.run(gpio=gpio)
+
+    elif type == 'DHT11':
+        from ESP01 import sensorDHT11
+
+        sensorDHT11.run(gpio=gpio)
