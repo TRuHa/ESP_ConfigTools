@@ -2,7 +2,7 @@ from web import server
 import ubinascii
 import network
 import machine
-import os
+import ujson
 
 ap_if = network.WLAN(network.AP_IF)
 ap_if.active(False)
@@ -10,10 +10,19 @@ ap_if.active(False)
 sta_if = network.WLAN(network.STA_IF)
 sta_if.active(False)
 
-print('[-] Iniciando sistema.')
-check_file = "config.json" in os.listdir()
+items = []
 
-if not check_file:
+print('[-] Iniciando sistema.')
+with open("config.json", "r") as outfile:
+    data = ujson.load(outfile)
+    subdata = data['config']
+    for item in subdata:
+        items.append(item['network'])
+        items.append(item['wifi'])
+        items.append(item['mqtt'])
+        items.append(item['mode'])
+
+if 'NO' in items:
     print('[!] Sistema sin configuracion.')
 
     mac = ubinascii.hexlify(ap_if.config('mac'), ':').decode()
